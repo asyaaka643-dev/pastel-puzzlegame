@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Pastel Puzzle</title>
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #fce1e4, #fff);
+      font-family: 'Comic Sans MS', cursive;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      margin: 0;
+    }
+
+    .game-box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 25px;
+      text-align: center;
+      width: 320px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      z-index: 2;
+    }
+
+    h1 { color: #ff9aa2; }
+    .score { color: #eac4d5; font-weight: bold; }
+    .level { color: #9cadce; font-weight: bold; }
+    .hint { color: #8ecae6; margin: 10px 0; }
+
+    input {
+      padding: 10px;
+      width: 90%;
+      border-radius: 15px;
+      border: 2px solid #ffd6e0;
+      margin-bottom: 10px;
+    }
+
+    button {
+      background: #cdb4db;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    button:hover { background: #b5838d; }
+
+    .cute {
+      font-size: 55px;
+      animation: bounce 1.5s infinite;
+    }
+
+    @keyframes bounce {
+      0%,100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+
+    /* Confetti */
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      animation: fall 2s linear forwards;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    /* Bubble background */
+    .bubble-bg {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+    }
+
+    .bubble-bg span {
+      position: absolute;
+      bottom: -100px;
+      background: rgba(255,182,193,0.4);
+      border-radius: 50%;
+      animation: float 10s infinite ease-in;
+    }
+
+    @keyframes float {
+      100% {
+        transform: translateY(-110vh) scale(1.3);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- BACKGROUND -->
+  <div class="bubble-bg">
+    <span style="left:5%;width:20px;height:20px;animation-duration:8s"></span>
+    <span style="left:15%;width:35px;height:35px;animation-duration:12s"></span>
+    <span style="left:25%;width:15px;height:15px;animation-duration:7s"></span>
+    <span style="left:35%;width:40px;height:40px;animation-duration:14s"></span>
+    <span style="left:45%;width:25px;height:25px;animation-duration:9s"></span>
+    <span style="left:55%;width:18px;height:18px;animation-duration:6s"></span>
+    <span style="left:65%;width:45px;height:45px;animation-duration:15s"></span>
+    <span style="left:75%;width:22px;height:22px;animation-duration:10s"></span>
+    <span style="left:85%;width:30px;height:30px;animation-duration:11s"></span>
+    <span style="left:95%;width:16px;height:16px;animation-duration:7s"></span>
+  </div>
+
+  <!-- GAME -->
+  <div class="game-box">
+    <h1>🧩 Pastel Puzzle</h1>
+    <p class="score">Score: <span id="score">0</span></p>
+    <p class="level">Level: <span id="level">1</span></p>
+    <p class="hint" id="hint"></p>
+    <div class="cute">✨</div>
+
+    <input id="answer" placeholder="Jawaban kamu..." onkeypress="handleKey(event)">
+    <button onclick="checkAnswer()">Cek Jawaban</button>
+    <button onclick="resetScore()">Reset Score</button>
+
+    <p id="result"></p>
+  </div>
+
+  <!-- JS -->
+  <script>
+    const levels = [
+      {name:"Level 1",questions:[
+        { hint: "Hewan lucu yang suka wortel 🥕", answer: "kelinci", emoji: "🐰" },
+        { hint: "Buah warna kuning 🍌", answer: "pisang", emoji: "🍌" },
+        { hint: "Hewan yang bilang meong 🐱", answer: "kucing", emoji: "🐱" },
+        { hint: "Minuman dari kopi ☕", answer: "kopi", emoji: "☕" },
+        { hint: "Benda buat nulis ✏️", answer: "pensil", emoji: "✏️" },
+ { hint: "Hewan kecil suka keju 🧀", answer: "tikus", emoji: "🐭" },
+  { hint: "Hewan yang lompat-lompat 🐸", answer: "katak", emoji: "🐸" },
+  { hint: "Buah merah kecil dan manis 🍓", answer: "strawberry", emoji: "🍓" },
+  { hint: "Benda buat menghapus tulisan ✏️", answer: "penghapus", emoji: "🧽" },
+  { hint: "Hewan besar punya belalai 🐘", answer: "gajah", emoji: "🐘" },
+  { hint: "Benda buat hujan-hujanan ☔", answer: "payung", emoji: "☔" },
+  { hint: "Hewan yang suka madu 🍯", answer: "beruang", emoji: "🐻" },
+  { hint: "Benda buat lihat waktu ⏰", answer: "jam", emoji: "⏰" },
+  { hint: "Hewan yang bisa terbang 🕊️", answer: "burung", emoji: "🐦" },
+  { hint: "Benda buat tidur 🛏️", answer: "kasur", emoji: "🛏️" }
+      ]},
+      {name:"Level 2",questions:[
+         { hint: "Planet paling besar di tata surya", answer: "jupiter", emoji: "🌕" },
+      { hint: "Planet paling panas di tata surya", answer: "venus", emoji: "🌕" },
+      { hint: "Planet paling dingin", answer: "uranus", emoji: "🌌" },
+      { hint: "Planet bercincin", answer: "saturnus", emoji: "🪐" },
+      { hint: "Planet bintang senja", answer: "merkurius", emoji: "🌕" },
+      { hint: "Warna hijau rasa rumput", answer: "matcha", emoji: "🌱" },
+      { hint: "Negri sakura", answer: "Jepang", emoji: "🌸" },
+      { hint: "Pembuat buket bunga", answer: "florist", emoji: "💐" },
+      { hint: "Ilmuwan jenius yang lukis Mona Lisa dan suka bikin mesin aneh", answer: "leonardo da vinci", emoji: "🤖" },
+      { hint: "Ilmuwan yang dikenal dengan rumus E = mc²", answer: "albert einstein", emoji: "💡" },
+      { hint: "Ratu Mesir kuno yang terkenal cerdas dan memesona", answer: "cleopatra", emoji: "🐍" },
+      { hint: "Wanita ular", answer: "medusa", emoji: "🐍" },
+      { hint: "Raja para dewa yunani kuno", answer: "zeus", emoji: "⚡" },
+      { hint: "Istri zeus", answer: "hera", emoji: "👑" },
+      { hint: "Dewa laut", answer: "poseidon", emoji: "🌊" }
+      ]},
+      {name:"Level 3",questions:[
+         { hint: "Raja Inggris dengan banyak istri dan sejarah kontroversial", answer: "henry viii", emoji: "💍" },
+  { hint: "Pangeran penjelajah yang membuka era penemuan dunia", answer: "prince henry", emoji: "🌍" },
+  { hint: "Pemimpin Makedonia yang menaklukkan Yunani dan hampir seluruh dunia kuno 🌍", answer: "alexander the great", emoji: "👑"},
+  { hint: "Sistem pemerintahan Yunani Kuno yang memberi kekuasaan kepada rakyat 🗳️", answer: "demokrasi", emoji: "📜"},
+  { hint: "Tempat olahraga dan keagamaan yang menjadi asal Olimpiade kuno 🏅", answer: "olympia", emoji: "🔥"},
+  { hint: "Permaisuri Rusia yang mendukung seni dan ilmu pengetahuan", answer: "catherine", emoji: "🎭" },
+  { hint: "Kaisar Romawi yang membangun Colosseum", answer: "vespasian", emoji: "🏛️" },
+  { hint: "Ratu Inggris yang dijuluki “Virgin Queen”", answer: "elizabeth i", emoji: "👸" },
+  { hint: "Dewi malam", answer: "nyx", emoji: "🌌" },
+  { hint: "Dewi bulan", answer: "artemis", emoji: "🌙🏹" },
+  { hint: "Dewa api", answer: "hephaestus", emoji: "🔥" },
+  { hint: "Filsuf Yunani yang dihukum mati dengan meminum racun karena dituduh merusak moral pemuda 🏛️", answer: "socrates", emoji: "⚖️"},
+  { hint: "Perang besar antara Athena dan Sparta yang melemahkan Yunani Kuno ⚔️", answer: "perang peloponnesos", emoji: "🛡️"},
+  { hint: "Kota Yunani yang terkenal dengan pendidikan militer keras sejak kecil 🗡️", answer: "sparta", emoji: "🏹"},
+  { hint: "Bangunan suci di Athena yang dipersembahkan untuk Dewi Athena 🏛️", answer: "parthenon", emoji: "🏛️"}
+      ]}
+    ];
+
+    let currentLevel = 0;
+    let correctCount = 0;
+    let score = localStorage.getItem("pastelPuzzleScore") || 0;
+    let currentQuestion;
+    document.getElementById("score").innerText = score;
+
+  function resetScore() {
+  score = 0;
+  localStorage.removeItem("pastelPuzzleScore");
+  document.getElementById("score").innerText = score;
+}
+
+    function loadQuestion() {
+      const q = levels[currentLevel].questions;
+      currentQuestion = q[Math.floor(Math.random() * q.length)];
+      hint.innerText = `(${levels[currentLevel].name}) ${currentQuestion.hint}`;
+      document.querySelector(".cute").innerText = currentQuestion.emoji;
+      answer.value = "";
+      result.innerText = "";
+      level.innerText = currentLevel + 1;
+    }
+
+    function handleKey(e) {
+      if (e.key === "Enter") checkAnswer();
+    }
+
+    function checkAnswer() {
+      if (answer.value.toLowerCase() === currentQuestion.answer) {
+        result.innerText = "🎉 BENAR!";
+        score += 10;
+        scoreSpan.innerText = score;
+        localStorage.setItem("pastelPuzzleScore", score);
+        correctCount++;
+        showConfetti();
+
+        if (correctCount >= 3) {
+          correctCount = 0;
+          currentLevel++;
+          if (currentLevel >= levels.length) return gameWin();
+        }
+        setTimeout(loadQuestion, 800);
+      } else {
+        result.innerText = "😿 Salah~";
+      }
+    }
+
+    function gameWin() {
+      document.querySelector(".game-box").innerHTML = `
+        <h1>🎉 YOU WIN 🎉</h1>
+        <p>Score akhir: <b>${score}</b></p>
+        <button onclick="location.reload()">Main Lagi</button>
+      `;
+    }
+
+    function showConfetti() {
+      for (let i=0;i<25;i++){
+        const c=document.createElement("div");
+        c.className="confetti";
+        c.style.left=Math.random()*100+"vw";
+        c.style.backgroundColor=["#ffafcc","#cdb4db","#bde0fe","#ffc8dd"][Math.floor(Math.random()*4)];
+        document.body.appendChild(c);
+        setTimeout(()=>c.remove(),2000);
+      }
+    }
+
+    const scoreSpan = document.getElementById("score");
+    loadQuestion();
+  </script>
+
+</body>
+</html>
